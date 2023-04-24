@@ -59,32 +59,6 @@ for i in range(len(best_eleven_df)):
     best_eleven_df['Club'].values[i] = best_eleven_club_dict[best_eleven_df['Club'].values[i]]
     best_eleven_df['POS'].values[i] = best_eleven_df['POS'].values[i][0]
 
-
-#Table Data Cleaning
-table_data = pd.read_csv('raw_data/all_tables.csv')    
-del(table_data['SW'])
-del(table_data['SL'])
-del(table_data['Head-to-head'])
-del(table_data['PPG'])
-del(table_data['GD'])
-table_data['D'] = table_data['D'].fillna(0)
-table_data['D'] = table_data['D'].astype(int)
-table_data['Pos'] = table_data['Pos'].astype(int)
-table_data['GD'] = table_data['GF'] - table_data['GA']
-table_data['Team'].unique()
-name_probz = [' (X)', ' (C)', ' (C, X)', ' (SS)', 's - ', 'x - ', 'y - ', ' (SS, W1)', ' (C1)', 'y ‚Äì ', 'x ‚Äì ', ' (SS) (W1)', ' (W1)', ' (E2)', ' (E3)', ' (SS, E1)', ' (E1)', 's ‚Äì ', ' (W2)', ' (W3)', '[a]', '[b]', ' (U)', ' (V)', ' 1', ' (S)', ' (M)', '2', '[e]']
-
-for i in range(len(table_data['Team'].values)):
-    for prob in name_probz:
-        if prob in table_data['Team'].values[i]:
-          table_data['Team'].values[i] = table_data['Team'].values[i].replace(prob, '')
-        else: pass
-        if 'Montr√©al' in table_data['Team'].values[i]:
-            table_data['Team'].values[i] = table_data['Team'].values[i].replace('Montr√©al', 'Montreal')
-        else: pass
-
-
-
 abbreviation_dict = {
     'Tampa Bay Mutiny':'TB', 
     'D.C. United': 'DC', 
@@ -126,7 +100,48 @@ abbreviation_dict = {
     'Chicago Fire FC': 'CHI', 
     'CF Montreal': 'MTL',
     'Houston Dynamo FC': "HOU", 
-    'Austin FC':'ATX'}
+    'Austin FC':'ATX',
+    }
+
+two_one_tables = pd.concat([pd.read_csv('raw_data/west_table_21.csv'),pd.read_csv('raw_data/east_table_21.csv')])
+two_two_tables = pd.concat([pd.read_csv('raw_data/west_table_22.csv'),pd.read_csv('raw_data/east_table_22.csv')])
+two_one_tables['Year'] = 2021
+two_two_tables['Year'] = 2022
+other_year_tables = pd.concat([two_one_tables,two_two_tables])
+other_year_tables['GD'] = other_year_tables['GF'] - other_year_tables['GA']
+other_year_tables['Club'] = other_year_tables['Squad']
+other_year_tables = other_year_tables[['Club','Year','W','L','D','GD']]
+#Table Data Cleaning
+table_data = pd.read_csv('raw_data/all_tables.csv')    
+del(table_data['SW'])
+del(table_data['SL'])
+del(table_data['Head-to-head'])
+del(table_data['PPG'])
+del(table_data['GD'])
+table_data['D'] = table_data['D'].fillna(0)
+table_data['D'] = table_data['D'].astype(int)
+table_data['Pos'] = table_data['Pos'].astype(int)
+table_data['GD'] = table_data['GF'] - table_data['GA']
+table_data['Team'].unique()
+name_probz = [' (X)', ' (C)', ' (C, X)', ' (SS)', 's - ', 'x - ', 'y - ', ' (SS, W1)', ' (C1)', 'y ‚Äì ', 'x ‚Äì ', ' (SS) (W1)', ' (W1)', ' (E2)', ' (E3)', ' (SS, E1)', ' (E1)', 's ‚Äì ', ' (W2)', ' (W3)', '[a]', '[b]', ' (U)', ' (V)', ' 1', ' (S)', ' (M)', '2', '[e]']
+
+for i in range(len(table_data['Team'].values)):
+    for prob in name_probz:
+        if prob in table_data['Team'].values[i]:
+          table_data['Team'].values[i] = table_data['Team'].values[i].replace(prob, '')
+        else: pass
+        if 'Montr√©al' in table_data['Team'].values[i]:
+            table_data['Team'].values[i] = table_data['Team'].values[i].replace('Montr√©al', 'Montreal')
+        else: pass
+    for key in abbreviation_dict.keys():
+        if table_data['Team'].values[i] == key:
+            table_data['Team'].values[i] == abbreviation_dict[key]
+
+
+table_data = table_data[table_data['Conference'] == 'Overall']
+table_data = table_data[['Club','Year','W','L','D','GD']]
+table_data = pd.concat([table_data,other_year_tables])
+
 
 all_players = pd.read_csv('raw_data/all_players.csv')
 for i in range(len(all_players)):
@@ -242,3 +257,6 @@ for i in range(len(goalkeeper_data)):
         gk_all_star_list.remove([goalkeeper_data['Player'].values[i], goalkeeper_data['Club'].values[i], goalkeeper_data['Year'].values[i]])
     else:
         goalkeeper_data['best_11'].values[i] = 0
+        
+goalkeeper_data.to_csv('final_data/goalkeeper_data.csv')
+field_player_data.to_csv('final_data/field_player_data.csv')
