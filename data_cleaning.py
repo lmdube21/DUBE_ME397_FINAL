@@ -59,6 +59,7 @@ for i in range(len(best_eleven_df)):
     best_eleven_df['Club'].values[i] = best_eleven_club_dict[best_eleven_df['Club'].values[i]]
     best_eleven_df['POS'].values[i] = best_eleven_df['POS'].values[i][0]
 
+
 #Table Data Cleaning
 table_data = pd.read_csv('raw_data/all_tables.csv')    
 del(table_data['SW'])
@@ -132,7 +133,7 @@ for i in range(len(all_players)):
     if all_players['Club'].values[i] == 'SKC':
         all_players['Club'].values[i] = 'KC'
     else: pass
-    if all_players['Club'].values[i] == 'NYRB':
+    if all_players['Club'].values[i] in ['RBNY', 'NYRB']:
         all_players['Club'].values[i] = 'NY'
     all_players['POS'].values[i] = all_players['POS'].values[i][0]
 
@@ -188,16 +189,56 @@ for i in range(len(gk_last_two)):
 goalkeeper_data = pd.concat([all_gk, gk_last_two])
 goalkeeper_data['Player'] = goalkeeper_data['Player'].apply(unidecode)
 
+for i in range(len(goalkeeper_data)):
+    if goalkeeper_data['Club'].values[i] == 'SKC':
+        goalkeeper_data['Club'].values[i] = 'KC'
+    else: pass
+    if goalkeeper_data['Club'].values[i] in ['RBNY', 'NYRB']:
+        goalkeeper_data['Club'].values[i] = 'NY'
+    goalkeeper_data['POS'].values[i] = goalkeeper_data['POS'].values[i][0]
+
+
 field_player_all_star_list = []
 for i in range(len(best_eleven_df)):
     if best_eleven_df['POS'].values[i] is not 'G':
-        field_player_all_star_list.append((best_eleven_df['Player'].values[i], best_eleven_df['Club'].values[i], best_eleven_df['Year'].values[i]))
+        field_player_all_star_list.append([best_eleven_df['Player'].values[i], best_eleven_df['Club'].values[i], int(best_eleven_df['Year'].values[i])])
     else: pass
 gk_all_star_list = []
 for i in range(len(best_eleven_df)):
     if best_eleven_df['POS'].values[i] is 'G':
-        gk_all_star_list.append((best_eleven_df['Player'].values[i], best_eleven_df['Club'].values[i], best_eleven_df['Year'].values[i]))
+        gk_all_star_list.append([best_eleven_df['Player'].values[i], best_eleven_df['Club'].values[i], int(best_eleven_df['Year'].values[i])])
     else: pass
 
 field_player_data['best_11'] = None
 goalkeeper_data['best_11'] = None
+
+field_player_data.drop_duplicates(inplace=True)
+goalkeeper_data.drop_duplicates(inplace=True)
+
+
+
+
+for i in range(len(field_player_data)):
+    if ' ' in field_player_data['Club'].values[i]:
+        field_player_data['Club'].values[i] = field_player_data['Club'].values[i].replace(' ','')
+    else: pass
+    if field_player_data['Player'].values[i][-1] == ' ':
+        field_player_data['Player'].values[i] = field_player_data['Player'].values[i][:-1]
+    else: pass
+    if [field_player_data['Player'].values[i], field_player_data['Club'].values[i], field_player_data['Year'].values[i]] in field_player_all_star_list:
+        field_player_data['best_11'].values[i] = 1
+        field_player_all_star_list.remove([field_player_data['Player'].values[i], field_player_data['Club'].values[i], field_player_data['Year'].values[i]])
+    else:
+        field_player_data['best_11'].values[i] = 0
+
+for i in range(len(goalkeeper_data)):
+    if ' ' in goalkeeper_data['Club'].values[i]:
+        goalkeeper_data['Club'].values[i] = goalkeeper_data['Club'].values[i].replace(' ','')
+    else: pass
+    if goalkeeper_data['Player'].values[i][-1] == ' ':
+        goalkeeper_data['Player'].values[i] = goalkeeper_data['Player'].values[i][:-1]
+    if [goalkeeper_data['Player'].values[i], goalkeeper_data['Club'].values[i], goalkeeper_data['Year'].values[i]] in gk_all_star_list:
+        goalkeeper_data['best_11'].values[i] = 1
+        gk_all_star_list.remove([goalkeeper_data['Player'].values[i], goalkeeper_data['Club'].values[i], goalkeeper_data['Year'].values[i]])
+    else:
+        goalkeeper_data['best_11'].values[i] = 0
