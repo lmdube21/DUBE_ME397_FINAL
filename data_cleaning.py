@@ -10,8 +10,6 @@ best_eleven_long = best_eleven.melt(id_vars=['Year'], value_vars=['Goalkeeper', 
 best_eleven_long['value'] = best_eleven_long['value'].apply(lambda x: x.replace(', ', ','))
 best_eleven_long['value'] = best_eleven_long['value'].apply(lambda x: x.replace('\n ', ','))
 
-
-
 df_list = []
 for i in range(len(best_eleven_long)):
     position = best_eleven_long['variable'].values[i]
@@ -101,6 +99,7 @@ abbreviation_dict = {
     'CF Montreal': 'MTL',
     'Houston Dynamo FC': "HOU", 
     'Austin FC':'ATX',
+    'Charlotte':'CHA'
     }
 
 two_one_tables = pd.concat([pd.read_csv('raw_data/west_table_21.csv'),pd.read_csv('raw_data/east_table_21.csv')])
@@ -135,10 +134,11 @@ for i in range(len(table_data['Team'].values)):
         else: pass
     for key in abbreviation_dict.keys():
         if table_data['Team'].values[i] == key:
-            table_data['Team'].values[i] == abbreviation_dict[key]
+            table_data['Team'].values[i] = abbreviation_dict[key]
 
 
 table_data = table_data[table_data['Conference'] == 'Overall']
+table_data['Club'] = table_data['Team']
 table_data = table_data[['Club','Year','W','L','D','GD']]
 table_data = pd.concat([table_data,other_year_tables])
 
@@ -257,6 +257,7 @@ for i in range(len(goalkeeper_data)):
         gk_all_star_list.remove([goalkeeper_data['Player'].values[i], goalkeeper_data['Club'].values[i], goalkeeper_data['Year'].values[i]])
     else:
         goalkeeper_data['best_11'].values[i] = 0
+field_player_data = field_player_data.merge(table_data, how='left', on = ['Club', 'Year'])
         
 goalkeeper_data.to_csv('final_data/goalkeeper_data.csv')
 field_player_data.to_csv('final_data/field_player_data.csv')
