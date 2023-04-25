@@ -187,9 +187,22 @@ top3_gk_idx = top_3_gk.index.get_level_values(1)
 top_3_gk_df= gk_df.loc[top3_gk_idx]
 
 model_results_field = pd.concat([top_3_def_df, top_3_fw_df, top_3_mid_df])
+del(model_results_field['Unnamed: 0'])
+del(model_results_field['logit_score'])
+del(model_results_field['prob_b11'])
+del(model_results_field['best_11'])
 true_best_11_results_field = pd.concat([fw_be_df, mid_be_df, def_be_df])
+del(true_best_11_results_field['Unnamed: 0'])
+del(true_best_11_results_field['best_11'])
 model_results_gk = top_3_gk_df
+del(model_results_gk['Unnamed: 0'])
+del(model_results_gk['logit_score'])
+del(model_results_gk['prob_b11'])
+del(model_results_gk['best_11'])
 true_best_11_gk = gk_be_df
+del(true_best_11_gk['Unnamed: 0'])
+del(true_best_11_gk['best_11'])
+
 
 model_results_field.to_pickle('final_data/model_results_field.pkl')
 true_best_11_results_field.to_pickle('final_data/best_11_results_field.pkl')
