@@ -13,6 +13,7 @@ fp_data = pd.read_csv('final_data/field_player_data.csv')
 gk_df = gk_data[gk_data['GP']>12]
 fp_data = fp_data[fp_data['GP']>12]
 fp_data['SC'] = fp_data['SC%']
+gk_df['SvPercent'] = gk_df['Sv%']
 
 gk_be_df = gk_df[gk_df['best_11'] == 1]
 
@@ -53,17 +54,25 @@ gk_df[['GP', 'SHTS', 'SV', 'GA', 'GAA', 'W', 'L', 'T', 'Sv%', 'best_11']].corr()
 
 fw_df= fw_df.dropna(subset=['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC',  'W', 'L'])
 mid_df= mid_df.dropna(subset=['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC',  'W', 'L'])
-def_df= def_df.dropna(subset=['GP', 'G',  'SHTS', 'SOG',  'W', 'L'])
+def_df= def_df.dropna(subset=['GP', 'G', 'A', 'SHTS', 'SOG',  'W', 'L'])
+gk_df = gk_df.dropna(subset=['GP', 'SHTS', 'SV', 'GA', 'GAA', 'W', 'L', 'T', 'SvPercent'])
 
 
 fw_model = smf.logit("best_11 ~ GP + G + A + SHTS + SOG + SC + YC + W + L", data = fw_df).fit()
 fw_model.summary()
 fw_y_predict = fw_model.predict(fw_df[['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC',  'W', 'L']])
+fw_df['logit_score'] = fw_y_predict
 #make binary zero/one from the percentages
 fw_prediction = list(map(round, fw_y_predict))
 # create a confustion matrix
 fw_cm = confusion_matrix(fw_df[['best_11']], fw_prediction)
 print ("Confusion Matrix : \n", fw_cm)
+fw_df['prob_b11'] = None
+for i in range(len(def_df)):
+    fw_df['prob_b11'].values[i] = math.exp(fw_df['logit_score'].values[i])/(1+math.exp(fw_df['logit_score'].values[i]))
+
+
+
 group_names = ['True Neg','False Pos','False Neg','True Pos']
 group_counts = ["{0:0.0f}".format(value) for value in
 fw_cm.flatten()]
@@ -80,11 +89,17 @@ plt.show()
 mid_model = smf.logit("best_11 ~ GP + G + A + SHTS + SOG + SC + YC + W + L", data = fw_df).fit()
 mid_model.summary()
 mid_y_predict = mid_model.predict(mid_df[['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC',  'W', 'L']])
+mid_df['logit_score'] = mid_y_predict
 #make binary zero/one from the percentages
 mid_prediction = list(map(round, mid_y_predict))
 # create a confustion matrix
 mid_cm = confusion_matrix(mid_df[['best_11']], mid_prediction)
 print ("Confusion Matrix : \n", mid_cm)
+mid_df['prob_b11'] = None
+for i in range(len(def_df)):
+    mid_df['prob_b11'].values[i] = math.exp(mid_df['logit_score'].values[i])/(1+math.exp(mid_df['logit_score'].values[i]))
+
+
 
 group_names = ['True Neg','False Pos','False Neg','True Pos']
 group_counts = ["{0:0.0f}".format(value) for value in
@@ -99,14 +114,19 @@ plt.show()
 
 
 
-def_model = smf.logit("best_11 ~ GP + G + SHTS + SOG + W + L", data = fw_df).fit()
+def_model = smf.logit("best_11 ~ GP + G + A + SHTS + SOG + W + L", data = fw_df).fit()
 def_model.summary()
 def_y_predict = def_model.predict(def_df[['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC',  'W', 'L']])
+def_df['logit_score'] = def_y_predict
 #make binary zero/one from the percentages
 def_prediction = list(map(round, def_y_predict))
 # create a confustion matrix
 def_cm = confusion_matrix(def_df[['best_11']], def_prediction)
 print ("Confusion Matrix : \n", def_cm)
+def_df['prob_b11'] = None
+for i in range(len(def_df)):
+    def_df['prob_b11'].values[i] = math.exp(def_df['logit_score'].values[i])/(1+math.exp(def_df['logit_score'].values[i]))
+
 
 group_names = ['True Neg','False Pos','False Neg','True Pos']
 group_counts = ["{0:0.0f}".format(value) for value in
@@ -117,5 +137,33 @@ labels = [f"{v1}\n{v2}\n{v3}" for v1, v2, v3 in
 zip(group_names,group_counts,group_percentages)]
 labels = np.asarray(labels).reshape(2,2)
 sns.heatmap(def_cm, annot=labels, fmt='', cmap='Blues')
+plt.show()
+
+
+
+gk_model = smf.logit("best_11 ~ GP + SHTS + SV + GA + GAA + W + L + T + SvPercent", data = gk_df).fit()
+gk_model.summary()
+gk_y_predict = gk_model.predict(gk_df[['GP', 'SHTS', 'SV', 'GA', 'GAA', 'W', 'L', 'T', 'SvPercent']])
+gk_df['logit_score'] = gk_y_predict
+
+#make binary zero/one from the percentages
+gk_prediction = list(map(round, gk_y_predict))
+# create a confustion matrix
+gk_cm = confusion_matrix(gk_df[['best_11']], gk_prediction)
+print ("Confusion Matrix : \n", gk_cm)
+gk_df['prob_b11'] = None
+for i in range(len(gk_df)):
+    gk_df['prob_b11'].values[i] = math.exp(gk_df['logit_score'].values[i])/(1+math.exp(gk_df['logit_score'].values[i]))
+
+
+group_names = ['True Neg','False Pos','False Neg','True Pos']
+group_counts = ["{0:0.0f}".format(value) for value in
+gk_cm.flatten()]
+group_percentages = ["{0:.2%}".format(value) for value in
+gk_cm.flatten()/np.sum(gk_cm)]
+labels = [f"{v1}\n{v2}\n{v3}" for v1, v2, v3 in
+zip(group_names,group_counts,group_percentages)]
+labels = np.asarray(labels).reshape(2,2)
+sns.heatmap(gk_cm, annot=labels, fmt='', cmap='Blues')
 plt.show()
 
