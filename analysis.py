@@ -52,15 +52,15 @@ mid_df[['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC', 'RC', 'W', 'L', 'D', 'best_11
 def_df[['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC', 'RC', 'W', 'L', 'D', 'best_11']].corr()
 gk_df[['GP', 'SHTS', 'SV', 'GA', 'GAA', 'W', 'L', 'T', 'Sv%', 'best_11']].corr()
 
-fw_df= fw_df.dropna(subset=['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC',  'W', 'L'])
-mid_df= mid_df.dropna(subset=['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC',  'W', 'L'])
+fw_df= fw_df.dropna(subset=['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC'])
+mid_df= mid_df.dropna(subset=['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC'])
 def_df= def_df.dropna(subset=['GP', 'G', 'A', 'SHTS', 'SOG',  'W', 'L'])
 gk_df = gk_df.dropna(subset=['GP', 'SHTS', 'SV', 'GA', 'GAA', 'W', 'L', 'T', 'SvPercent'])
 
 
-fw_model = smf.logit("best_11 ~ GP + G + A + SHTS + SOG + SC + YC + W + L", data = fw_df).fit()
+fw_model = smf.logit("best_11 ~ GP + G + A + SHTS + SOG + SC + YC", data = fw_df).fit()
 fw_model.summary()
-fw_y_predict = fw_model.predict(fw_df[['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC',  'W', 'L']])
+fw_y_predict = fw_model.predict(fw_df[['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC']])
 fw_df['logit_score'] = fw_y_predict
 #make binary zero/one from the percentages
 fw_prediction = list(map(round, fw_y_predict))
@@ -68,7 +68,7 @@ fw_prediction = list(map(round, fw_y_predict))
 fw_cm = confusion_matrix(fw_df[['best_11']], fw_prediction)
 print ("Confusion Matrix : \n", fw_cm)
 fw_df['prob_b11'] = None
-for i in range(len(def_df)):
+for i in range(len(fw_df)):
     fw_df['prob_b11'].values[i] = math.exp(fw_df['logit_score'].values[i])/(1+math.exp(fw_df['logit_score'].values[i]))
 
 
@@ -86,9 +86,9 @@ plt.show()
 
 
 
-mid_model = smf.logit("best_11 ~ GP + G + A + SHTS + SOG + SC + YC + W + L", data = fw_df).fit()
+mid_model = smf.logit("best_11 ~ GP + G + A + SHTS + SOG + SC + YC", data = fw_df).fit()
 mid_model.summary()
-mid_y_predict = mid_model.predict(mid_df[['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC',  'W', 'L']])
+mid_y_predict = mid_model.predict(mid_df[['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC']])
 mid_df['logit_score'] = mid_y_predict
 #make binary zero/one from the percentages
 mid_prediction = list(map(round, mid_y_predict))
@@ -96,7 +96,7 @@ mid_prediction = list(map(round, mid_y_predict))
 mid_cm = confusion_matrix(mid_df[['best_11']], mid_prediction)
 print ("Confusion Matrix : \n", mid_cm)
 mid_df['prob_b11'] = None
-for i in range(len(def_df)):
+for i in range(len(mid_df)):
     mid_df['prob_b11'].values[i] = math.exp(mid_df['logit_score'].values[i])/(1+math.exp(mid_df['logit_score'].values[i]))
 
 
@@ -114,9 +114,9 @@ plt.show()
 
 
 
-def_model = smf.logit("best_11 ~ GP + G + A + SHTS + SOG + W + L", data = fw_df).fit()
+def_model = smf.logit("best_11 ~ GP + G + A + SHTS + SOG", data = fw_df).fit()
 def_model.summary()
-def_y_predict = def_model.predict(def_df[['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC',  'W', 'L']])
+def_y_predict = def_model.predict(def_df[['GP', 'G', 'A', 'SHTS', 'SOG', 'SC', 'YC']])
 def_df['logit_score'] = def_y_predict
 #make binary zero/one from the percentages
 def_prediction = list(map(round, def_y_predict))
@@ -166,4 +166,34 @@ zip(group_names,group_counts,group_percentages)]
 labels = np.asarray(labels).reshape(2,2)
 sns.heatmap(gk_cm, annot=labels, fmt='', cmap='Blues')
 plt.show()
+
+top_3_fw = fw_df.groupby('Year')['logit_score'].nlargest(3)
+top3_fw_idx = top_3_fw.index.get_level_values(1)
+top_3_fw_df= fw_df.loc[top3_fw_idx]
+
+# Create a new dataframe with only the rows that contain the top 3 values for each category
+
+
+top_3_mid = mid_df.groupby('Year')['logit_score'].nlargest(3)
+top3_mid_idx = top_3_mid.index.get_level_values(1)
+top_3_mid_df= mid_df.loc[top3_mid_idx]
+
+top_3_def = def_df.groupby('Year')['logit_score'].nlargest(3)
+top3_def_idx = top_3_def.index.get_level_values(1)
+top_3_def_df= def_df.loc[top3_def_idx]
+
+top_3_gk = gk_df.groupby('Year')['logit_score'].nlargest(3)
+top3_gk_idx = top_3_gk.index.get_level_values(1)
+top_3_gk_df= gk_df.loc[top3_gk_idx]
+
+model_results_field = pd.concat([top_3_def_df, top_3_fw_df, top_3_mid_df])
+true_best_11_results_field = pd.concat([fw_be_df, mid_be_df, def_be_df])
+model_results_gk = top_3_gk_df
+true_best_11_gk = gk_be_df
+
+model_results_field.to_pickle('final_data/model_results_field.pkl')
+true_best_11_results_field.to_pickle('final_data/best_11_results_field.pkl')
+model_results_gk.to_pickle('final_data/model_results_gk.pkl')
+true_best_11_gk.to_pickle('final_data/best_11_gk.pkl')
+
 
