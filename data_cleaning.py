@@ -99,7 +99,22 @@ abbreviation_dict = {
     'CF Montreal': 'MTL',
     'Houston Dynamo FC': "HOU", 
     'Austin FC':'ATX',
-    'Charlotte':'CHA'
+    'Charlotte':'CHA',
+    'Sporting KC': 'KC',
+    'Seattle':'SEA',
+    'Vancouver':'VAN',
+    'Minnesota Utd':'MIN',
+    'San Jose': 'SJ',
+    'Austin':'ATX',
+    'New England': 'NE',
+    'Philadelphia':'PHI',
+    'Nashville':'NSH',
+    'NYCFC':'NYC',
+    'Atlanta Utd':'ATL',
+    'Orlando City':'ORL',
+    'NY Red Bulls':'NY',
+    'CF Montréal': 'MTL',
+    'Inter Miami':'MIA'
     }
 
 two_one_tables = pd.concat([pd.read_csv('raw_data/west_table_21.csv'),pd.read_csv('raw_data/east_table_21.csv')])
@@ -111,7 +126,8 @@ other_year_tables['GD'] = other_year_tables['GF'] - other_year_tables['GA']
 other_year_tables['Club'] = other_year_tables['Squad']
 other_year_tables = other_year_tables[['Club','Year','W','L','D','GD']]
 #Table Data Cleaning
-table_data = pd.read_csv('raw_data/all_tables.csv')    
+table_data = pd.read_csv('raw_data/all_tables.csv')  
+table_data = table_data[table_data['Year'] != 2021]  
 del(table_data['SW'])
 del(table_data['SL'])
 del(table_data['Head-to-head'])
@@ -124,6 +140,8 @@ table_data['GD'] = table_data['GF'] - table_data['GA']
 table_data['Team'].unique()
 name_probz = [' (X)', ' (C)', ' (C, X)', ' (SS)', 's - ', 'x - ', 'y - ', ' (SS, W1)', ' (C1)', 'y ‚Äì ', 'x ‚Äì ', ' (SS) (W1)', ' (W1)', ' (E2)', ' (E3)', ' (SS, E1)', ' (E1)', 's ‚Äì ', ' (W2)', ' (W3)', '[a]', '[b]', ' (U)', ' (V)', ' 1', ' (S)', ' (M)', '2', '[e]']
 
+
+
 for i in range(len(table_data['Team'].values)):
     for prob in name_probz:
         if prob in table_data['Team'].values[i]:
@@ -132,15 +150,21 @@ for i in range(len(table_data['Team'].values)):
         if 'Montr√©al' in table_data['Team'].values[i]:
             table_data['Team'].values[i] = table_data['Team'].values[i].replace('Montr√©al', 'Montreal')
         else: pass
-    for key in abbreviation_dict.keys():
-        if table_data['Team'].values[i] == key:
-            table_data['Team'].values[i] = abbreviation_dict[key]
 
 
 table_data = table_data[table_data['Conference'] == 'Overall']
 table_data['Club'] = table_data['Team']
 table_data = table_data[['Club','Year','W','L','D','GD']]
 table_data = pd.concat([table_data,other_year_tables])
+
+for i in range(len(table_data['Club'].values)):
+    for key in abbreviation_dict.keys():
+        if table_data['Club'].values[i] == key:
+            table_data['Club'].values[i] = abbreviation_dict[key]
+        else: pass
+
+
+
 
 
 all_players = pd.read_csv('raw_data/all_players.csv')
