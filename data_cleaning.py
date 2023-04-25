@@ -215,12 +215,12 @@ for i in range(len(goalkeeper_data)):
 
 field_player_all_star_list = []
 for i in range(len(best_eleven_df)):
-    if best_eleven_df['POS'].values[i] is not 'G':
+    if best_eleven_df['POS'].values[i] != 'G':
         field_player_all_star_list.append([best_eleven_df['Player'].values[i], best_eleven_df['Club'].values[i], int(best_eleven_df['Year'].values[i])])
     else: pass
 gk_all_star_list = []
 for i in range(len(best_eleven_df)):
-    if best_eleven_df['POS'].values[i] is 'G':
+    if best_eleven_df['POS'].values[i] == 'G':
         gk_all_star_list.append([best_eleven_df['Player'].values[i], best_eleven_df['Club'].values[i], int(best_eleven_df['Year'].values[i])])
     else: pass
 
